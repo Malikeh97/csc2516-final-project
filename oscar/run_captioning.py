@@ -928,9 +928,9 @@ def main():
     # Setup CUDA, GPU & distributed training
     local_rank = ensure_init_process_group(local_rank=args.local_rank)
     args.local_rank = local_rank
-    args.num_gpus = 0 #get_world_size()
+    args.num_gpus = get_world_size()
     args.distributed = args.num_gpus > 1
-    args.device = torch.device('cpu')
+    args.device = torch.device('cuda')
     synchronize()
 
     output_dir = args.output_dir
