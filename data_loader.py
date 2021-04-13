@@ -1,12 +1,4 @@
 from vizwiz import VizWiz
-import ssl
-
-# ssl._create_default_https_context = ssl._create_unverified_context
-#
-# val_data = VizWiz('./annotations/val.json')
-# # print(val_data.getAnnIds())
-# # print(val_data.getImgIds())
-
 import nltk
 import os
 import torch
@@ -15,11 +7,10 @@ from vocabulary import Vocabulary
 from PIL import Image
 import numpy as np
 from tqdm import tqdm
-import random
 import json
 
 
-def get_loader(transform,
+def get_loader(transform=None,
                mode='train',
                batch_size=1,
                vocab_threshold=None,
@@ -128,7 +119,8 @@ class VizWizDataset(data.Dataset):
 
             # Convert image to tensor and pre-process using transform
             image = Image.open(os.path.join(self.img_folder, path)).convert('RGB')
-            image = self.transform(image)
+            if self.transform:
+                image = self.transform(image)
 
             # Convert caption to tensor of word ids.
             tokens = nltk.tokenize.word_tokenize(str(caption).lower())
