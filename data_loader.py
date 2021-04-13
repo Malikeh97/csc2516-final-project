@@ -52,8 +52,8 @@ def get_loader(transform=None,
         assert batch_size == 1, "Please change batch_size to 1 if testing your model."
         assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
         assert vocab_from_file == True, "Change vocab_from_file to True."
-        img_folder = os.path.join(vizwiz_loc, 'images/test/')
-        annotations_file = os.path.join(vizwiz_loc, 'annotations/test.json')
+        img_folder = os.path.join(vizwiz_loc, 'images/val/')
+        annotations_file = os.path.join(vizwiz_loc, 'annotations/val.json')
 
     # VizWiz caption dataset.
     dataset = VizWizDataset(transform=transform,
