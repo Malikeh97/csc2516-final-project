@@ -124,7 +124,14 @@ if __name__ == "__main__":
                 convert_models_to_fp32(model)
                 optimizer.step()
                 clip.model.convert_weights(model)
+
     
     # Save trained model
     torch.save(model, "trainedModel.pt")
+
+    # get model predictions
+    val_imgs = glob.glob('./val/daisy/*.jpg')
+    test_images = transform(val_imgs).unsqueeze(0).to(device)
+    test_texts = clip.tokenize(['daisy', 'dandelion', 'rose'])
+    print(model(test_images, test_texts))
 
