@@ -76,7 +76,12 @@ if __name__ == "__main__":
         candidate_captions = f.read().splitlines()
 
     device = "cuda:0" if torch.cuda.is_available() else "cpu" # If using GPU then use mixed precision training.
-    model, transform = clip.load("ViT-B/32", device=device, jit=False) # Must set jit=False for training
+
+    if os.path.exists('./trainedModel.pt'):
+        print("loading local model")
+        model, transform = clip.load("./trainedModel.pt", device=device, jit=False)  # Must set jit=False for training
+    else:
+        model, transform = clip.load("ViT-B/32", device=device, jit=False) # Must set jit=False for training
 
     dataset = get_dataset()
 
@@ -106,9 +111,9 @@ if __name__ == "__main__":
 
             logits_per_image, logits_per_text = model(images, texts)
             if device == "cpu":
-                ground_truth = torch.arange(BATCH_SIZE).long().to(device)
+                ground_truth = torch.arange(len(list_image)).long().to(device)
             else:
-                ground_truth = torch.arange(BATCH_SIZE).half().to(device)
+                ground_truth = torch.arange(len(list_image)).half().to(device)
 
             total_loss = (loss_img(logits_per_image,ground_truth) + loss_txt(logits_per_text,ground_truth))/2
             total_loss.backward()
