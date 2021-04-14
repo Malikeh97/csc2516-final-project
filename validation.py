@@ -11,6 +11,9 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu')
         # check on full dataset
         steps = len(val_data_loader.dataset.caption_lengths)
 
+        encoder.eval()
+        decoder.eval()
+
         for i_step in range(1, steps + 1):
             # Obtain the batch.
             image, caption = next(iter(data_loader))
@@ -25,7 +28,7 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu')
             # Calculate the batch loss.
             loss = criterion(outputs.contiguous().view(-1, vocab_size), caption.view(-1))
             val_loss += loss
-            print(val_loss)
+            # print(val_loss)
 
         val_loss /= steps
         return val_loss

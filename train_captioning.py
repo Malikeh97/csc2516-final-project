@@ -9,10 +9,9 @@ import ssl
 import torch.utils.data as data
 import numpy as np
 import os
-import requests
-import time
 from models import EncoderCNN, DecoderRNN
 import utils
+import validation
 
 ssl._create_default_https_context = ssl._create_unverified_context
 nltk.download('punkt')
@@ -74,6 +73,10 @@ val_loss_per_epoch = []
 
 for epoch in range(1, num_epochs + 1):
     avg_batch_loss = 0
+
+    encoder.train()
+    decoder.train()
+
     for i_step in range(1, total_step + 1):
 
         # Randomly sample a caption length, and sample indices with that length.
@@ -135,13 +138,7 @@ for epoch in range(1, num_epochs + 1):
     # TODO: Validation
     # use val_data_loader form above
     avg_loss = 0
-
-    # for i in 1 - total_val_steps?
-    # ...
-    # loss = criterion()
-    # avg_loss += loss
-    # ...
-
+    val_loss = validation.validate(encoder, decoder, criterion, val_data_loader, vocab_size, device)
     val_loss_per_epoch.append(avg_loss)
 
 
