@@ -12,17 +12,7 @@ import os
 import requests
 import time
 from models import EncoderCNN, DecoderRNN
-
-def clean_sentence(output):
-    list_string = []
-
-    for idx in output:
-        list_string.append(data_loader.dataset.vocab.idx2word[idx])
-
-    list_string = list_string[1:-1]  # Discard <start> and <end> words
-    sentence = ' '.join(list_string)  # Convert list of string to full string
-    sentence = sentence.capitalize()  # Capitalize the first letter of the first word
-    return sentence
+import utils
 
 ssl._create_default_https_context = ssl._create_unverified_context
 nltk.download('punkt')
@@ -48,6 +38,8 @@ transform_train = transforms.Compose([
 # Build data loader.
 data_loader = get_loader(transform=transform_train, mode='train', batch_size=batch_size, vocab_threshold=vocab_threshold,
                          vocab_from_file=vocab_from_file)
+val_data_loader = get_loader(transform=transform_train, mode='test', vocab_from_file=vocab_from_file)
+
 # The size of the vocabulary.
 vocab_size = len(data_loader.dataset.vocab)
 print(vocab_size)
@@ -76,12 +68,17 @@ total_step = math.ceil(len(data_loader.dataset.caption_lengths) / data_loader.ba
 # Open the training log file.
 f = open(log_file, 'w')
 
-old_time = time.time()
+# old_time = time.time()
 # response = requests.request("GET",
 #                             "http://metadata.google.internal/computeMetadata/v1/instance/attributes/keep_alive_token",
 #                             headers={"Metadata-Flavor": "Google"})
 
+# Collect losses in these arrays
+training_loss_per_epoch = []
+test_loss_per_epoch = []
+
 for epoch in range(1, num_epochs + 1):
+    avg_batch_loss = 0
     for i_step in range(1, total_step + 1):
 
         # if time.time() - old_time > 60:
@@ -114,6 +111,7 @@ for epoch in range(1, num_epochs + 1):
         # Calculate the batch loss.
         #         print("outputs.shape: ", outputs.shape)
         loss = criterion(outputs.contiguous().view(-1, vocab_size), captions.view(-1))
+        avg_batch_loss += loss
 
         # Backward pass.
         loss.backward()
@@ -143,5 +141,14 @@ for epoch in range(1, num_epochs + 1):
         torch.save(decoder.state_dict(), os.path.join('./models', 'decoder-%d.pkl' % epoch))
         torch.save(encoder.state_dict(), os.path.join('./models', 'encoder-%d.pkl' % epoch))
 
+    avg_batch_loss /= total_step
+    training_loss_per_epoch.append(avg_batch_loss)
+
+    # TODO: Validation
+    # use val_data_loader form above
+
+
+
 # Close the training log file.
 f.close()
+
