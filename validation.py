@@ -3,34 +3,32 @@ import torch.nn as nn
 from data_loader import get_loader
 from torchvision import transforms
 from models import EncoderCNN, DecoderRNN
+import math
 
 def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu'):
     with torch.no_grad():
-        val_loss = 0
-
-        # check on full dataset
-        steps = len(val_data_loader.dataset.caption_lengths)
-
         encoder.eval()
         decoder.eval()
-
-        for i_step in range(1, steps + 1):
+        val_loss = 0
+        # Set the total number of training steps per epoch.
+        total_step = math.ceil(len(data_loader.dataset.caption_lengths) / data_loader.batch_sampler.batch_size)
+        for i_step in range(1, total_step + 1):
             # Obtain the batch.
-            image, caption = next(iter(data_loader))
+            images, captions = next(iter(data_loader))
             # Move batch of images and captions to GPU if CUDA is available.
-            image = image.to(device)
-            caption = caption.to(device)
+            images = images.to(device)
+            captions = captions.to(device)
 
             # Pass the inputs through the CNN-RNN model.
-            features = encoder(image)
-            outputs = decoder(features, caption)
+            features = encoder(images)
+            outputs = decoder(features, captions)
 
             # Calculate the batch loss.
-            loss = criterion(outputs.contiguous().view(-1, vocab_size), caption.view(-1))
+            loss = criterion(outputs.contiguous().view(-1, vocab_size), captions.view(-1))
             val_loss += loss
-            # print(val_loss)
+            print(val_loss)
 
-        val_loss /= steps
+        val_loss /= total_step
         return val_loss
 
 # test validation

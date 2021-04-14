@@ -20,7 +20,8 @@ def get_loader(transform=None,
                unk_word="<unk>",
                vocab_from_file=True,
                num_workers=0,
-               vizwiz_loc='./'):
+               vizwiz_loc='./',
+               full_batch=False):
     """Returns the data loader.
     Args:
       transform: Image transform.
@@ -50,7 +51,6 @@ def get_loader(transform=None,
                                         'annotations/train.json')
 
     if mode == 'val':
-        assert batch_size == 1, "Please change batch_size to 1 if testing your model."
         assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
         assert vocab_from_file == True, "Change vocab_from_file to True."
         img_folder = os.path.join(vizwiz_loc,
@@ -62,8 +62,8 @@ def get_loader(transform=None,
         assert batch_size == 1, "Please change batch_size to 1 if testing your model."
         assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
         assert vocab_from_file == True, "Change vocab_from_file to True."
-        img_folder = os.path.join(vizwiz_loc, 'images/val/')
-        annotations_file = os.path.join(vizwiz_loc, 'annotations/val.json')
+        img_folder = os.path.join(vizwiz_loc, 'images/test/')
+        annotations_file = os.path.join(vizwiz_loc, 'annotations/test.json')
 
     # VizWiz caption dataset.
     dataset = VizWizDataset(transform=transform,
@@ -76,7 +76,8 @@ def get_loader(transform=None,
                           unk_word=unk_word,
                           annotations_file=annotations_file,
                           vocab_from_file=vocab_from_file,
-                          img_folder=img_folder)
+                          img_folder=img_folder,
+                          full_batch=full_batch)
 
     if mode == 'train':
         # Randomly sample a caption length, and sample indices with that length.
@@ -105,7 +106,7 @@ def get_loader(transform=None,
 class VizWizDataset(data.Dataset):
 
     def __init__(self, transform, mode, batch_size, vocab_threshold, vocab_file, start_word,
-                 end_word, unk_word, annotations_file, vocab_from_file, img_folder):
+                 end_word, unk_word, annotations_file, vocab_from_file, img_folder, full_batch):
         self.transform = transform
         self.mode = mode
         self.batch_size = batch_size
@@ -122,6 +123,10 @@ class VizWizDataset(data.Dataset):
         else:
             test_info = json.loads(open(annotations_file).read())
             self.paths = [item['file_name'] for item in test_info['images']]
+
+        if full_batch:
+            self.batch_size = len(self.caption_lengths)
+
 
     def __getitem__(self, index):
         # obtain image and caption if in training mode
