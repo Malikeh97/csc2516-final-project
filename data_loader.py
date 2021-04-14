@@ -37,7 +37,7 @@ def get_loader(transform=None,
       vizwiz_loc: The location of the folder containing the VizWiz API
     """
 
-    assert mode in ['train', 'test'], "mode must be one of 'train' or 'test'."
+    assert mode in ['train', 'test', 'val'], "mode must be one of 'train', 'val' or 'test'."
     if vocab_from_file == False: assert mode == 'train', "To generate vocab from captions file, must be in training mode (mode='train')."
 
     # Based on mode (train, val, test), obtain img_folder and annotations_file.
@@ -48,6 +48,16 @@ def get_loader(transform=None,
                                   'images/train/')
         annotations_file = os.path.join(vizwiz_loc,
                                         'annotations/train.json')
+
+    if mode == 'val':
+        assert batch_size == 1, "Please change batch_size to 1 if testing your model."
+        assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
+        assert vocab_from_file == True, "Change vocab_from_file to True."
+        img_folder = os.path.join(vizwiz_loc,
+                                  'images/val/')
+        annotations_file = os.path.join(vizwiz_loc,
+                                        'annotations/val.json')
+
     if mode == 'test':
         assert batch_size == 1, "Please change batch_size to 1 if testing your model."
         assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
@@ -73,12 +83,16 @@ def get_loader(transform=None,
         indices = dataset.get_train_indices()
         # Create and assign a batch sampler to retrieve a batch with the sampled indices.
         initial_sampler = data.sampler.SubsetRandomSampler(indices=indices)
-        # data loader for COCO dataset.
+        # data loader for VizWiz dataset.
         data_loader = data.DataLoader(dataset=dataset,
                                       num_workers=num_workers,
                                       batch_sampler=data.sampler.BatchSampler(sampler=initial_sampler,
                                                                               batch_size=dataset.batch_size,
                                                                               drop_last=False))
+    elif mode == 'val':
+        data_loader = data.DataLoader(dataset=dataset,
+                                  batch_size=dataset.batch_size,
+                                  num_workers=num_workers)
     else:
         data_loader = data.DataLoader(dataset=dataset,
                                       batch_size=dataset.batch_size,
@@ -98,11 +112,11 @@ class VizWizDataset(data.Dataset):
         self.vocab = Vocabulary(vocab_threshold, vocab_file, start_word,
                                 end_word, unk_word, annotations_file, vocab_from_file)
         self.img_folder = img_folder
-        if self.mode == 'train':
-            self.coco = VizWiz(annotations_file)
-            self.ids = list(self.coco.anns.keys())
+        if self.mode == 'train' or self.mode == 'val':
+            self.wizviz = VizWiz(annotations_file)
+            self.ids = list(self.wizviz.anns.keys())
             print('Obtaining caption lengths...')
-            all_tokens = [nltk.tokenize.word_tokenize(str(self.coco.anns[self.ids[index]]['caption']).lower()) for index
+            all_tokens = [nltk.tokenize.word_tokenize(str(self.wizviz.anns[self.ids[index]]['caption']).lower()) for index
                           in tqdm(np.arange(len(self.ids)))]
             self.caption_lengths = [len(token) for token in all_tokens]
         else:
@@ -113,9 +127,9 @@ class VizWizDataset(data.Dataset):
         # obtain image and caption if in training mode
         if self.mode == 'train':
             ann_id = self.ids[index]
-            caption = self.coco.anns[ann_id]['caption']
-            img_id = self.coco.anns[ann_id]['image_id']
-            path = self.coco.loadImgs(img_id)[0]['file_name']
+            caption = self.wizviz.anns[ann_id]['caption']
+            img_id = self.wizviz.anns[ann_id]['image_id']
+            path = self.wizviz.loadImgs(img_id)[0]['file_name']
 
             # Convert image to tensor and pre-process using transform
             image = Image.open(os.path.join(self.img_folder, path)).convert('RGB')
