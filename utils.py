@@ -1,17 +1,16 @@
 import matplotlib.pyplot as plt
-import data_loader
 
 # TODO : not working yet
-# def clean_sentence(output):
-#     list_string = []
-#
-#     for idx in output:
-#         list_string.append(data_loader.dataset.vocab.idx2word[idx])
-#
-#     list_string = list_string[1:-1]  # Discard <start> and <end> words
-#     sentence = ' '.join(list_string)  # Convert list of string to full string
-#     sentence = sentence.capitalize()  # Capitalize the first letter of the first word
-#     return sentence
+def clean_sentence(output, data_loader):
+    list_string = []
+
+    for idx in output:
+        list_string.append(data_loader.dataset.vocab.idx2word[idx])
+
+    list_string = list_string[1:-1]  # Discard <start> and <end> words
+    sentence = ' '.join(list_string)  # Convert list of string to full string
+    sentence = sentence.capitalize()  # Capitalize the first letter of the first word
+    return sentence
 
 def plotLosses(train_loss, val_loss, title):
     plt.figure()
