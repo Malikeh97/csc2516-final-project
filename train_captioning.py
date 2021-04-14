@@ -87,7 +87,7 @@ if __name__ == "__main__":
             data_loader.batch_sampler.sampler = new_sampler
 
             # Obtain the batch.
-            images, captions, _ = next(iter(data_loader))
+            images, captions = next(iter(data_loader))
 
             # Move batch of images and captions to GPU if CUDA is available.
             images = images.to(device)

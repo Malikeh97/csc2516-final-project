@@ -113,24 +113,35 @@ class VizWizDataset(data.Dataset):
         self.vocab = Vocabulary(vocab_threshold, vocab_file, start_word,
                                 end_word, unk_word, annotations_file, vocab_from_file)
         self.img_folder = img_folder
-        if self.mode == 'train' or self.mode == 'val':
+        if self.mode == 'train':
             self.wizviz = VizWiz(annotations_file)
             self.ids = list(self.wizviz.anns.keys())
             print('Obtaining caption lengths...')
             all_tokens = [nltk.tokenize.word_tokenize(str(self.wizviz.anns[self.ids[index]]['caption']).lower()) for index
                           in tqdm(np.arange(len(self.ids)))]
             self.caption_lengths = [len(token) for token in all_tokens]
+
+        elif self.mode == 'val':
+            self.wizviz = VizWiz(annotations_file)
+            self.ids = list(self.wizviz.anns.keys())
+            print('Obtaining caption lengths...')
+            all_tokens = [nltk.tokenize.word_tokenize(str(self.wizviz.anns[self.ids[index]]['caption']).lower()) for
+                          index
+                          in tqdm(np.arange(len(self.ids)))]
+            self.caption_lengths = [len(token) for token in all_tokens]
+
+            test_info = json.loads(open(annotations_file).read())
+            self.paths = [item for item in test_info['images'] if len(self.wizviz.imgToAnns[item['id']]) > 0]
+
         else:
             test_info = json.loads(open(annotations_file).read())
             self.paths = [item['file_name'] for item in test_info['images']]
 
-        if full_batch:
-            self.batch_size = len(self.caption_lengths)
 
 
     def __getitem__(self, index):
         # obtain image and caption if in training mode
-        if self.mode == 'train' or self.mode == 'val':
+        if self.mode == 'train':
             ann_id = self.ids[index]
             caption = self.wizviz.anns[ann_id]['caption']
             img_id = self.wizviz.anns[ann_id]['image_id']
@@ -152,6 +163,30 @@ class VizWizDataset(data.Dataset):
             # return pre-processed image and caption tensors
             return image, caption
 
+        elif self.mode == 'val':
+            image = self.paths[index]
+            img_id = image['id']
+
+            # pick first matching cation
+            caption = self.wizviz.imgToAnns[img_id][0]
+
+            path = self.wizviz.loadImgs(img_id)[0]['file_name']
+
+            # Convert image to tensor and pre-process using transform
+            image = Image.open(os.path.join(self.img_folder, path)).convert('RGB')
+            if self.transform:
+                image = self.transform(image)
+
+            # Convert caption to tensor of word ids.
+            tokens = nltk.tokenize.word_tokenize(str(caption).lower())
+            caption = []
+            caption.append(self.vocab(self.vocab.start_word))
+            caption.extend([self.vocab(token) for token in tokens])
+            caption.append(self.vocab(self.vocab.end_word))
+            caption = torch.Tensor(caption).long()
+
+            # return pre-processed image and caption tensors
+            return image, caption, img_id
         # obtain image if in test mode
         else:
             path = self.paths[index]
@@ -171,7 +206,7 @@ class VizWizDataset(data.Dataset):
         return indices
 
     def __len__(self):
-        if self.mode == 'train' or self.mode == 'val':
+        if self.mode == 'train':
             return len(self.ids)
         else:
             return len(self.paths)

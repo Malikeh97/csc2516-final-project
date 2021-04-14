@@ -13,8 +13,8 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
         decoder.eval()
         val_loss = 0
 
-        # Set the total number of batches (batch_size = 1)
-        total_step = len(data_loader.dataset.caption_lengths)
+        total_step = len(data_loader.dataset.paths) #number of images in val dataset
+
         for batch in data_loader:
 
             # Obtain the batch.
@@ -32,10 +32,10 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
             val_loss += loss
             print(val_loss)
 
-            # TODO: generate captions
-            # if save_captions:
-            #     pred = decoder.sample(features.unsqueeze(1))
-            #     utils.clean_sentence(pred, data_loader)
+            # TODO: save captions
+            if save_captions:
+                pred = decoder.sample(features.unsqueeze(1))
+                caption = utils.clean_sentence(pred, data_loader)
 
         val_loss /= total_step
         return val_loss

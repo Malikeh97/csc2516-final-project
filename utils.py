@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 
-# TODO : not working yet
 def clean_sentence(output, data_loader):
     list_string = []
 
