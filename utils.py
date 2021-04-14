@@ -13,11 +13,11 @@ import data_loader
 #     sentence = sentence.capitalize()  # Capitalize the first letter of the first word
 #     return sentence
 
-def plotLosses(train_loss, val_loss, title, x_label):
+def plotLosses(train_loss, val_loss, title):
     plt.figure()
     plt.plot(train_loss, label='training loss')
     plt.plot(val_loss, label='validation loss')
-    plt.xlabel(x_label)
+    plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.title(title)

@@ -17,9 +17,9 @@ import utils
 ssl._create_default_https_context = ssl._create_unverified_context
 nltk.download('punkt')
 
-batch_size = 32          # batch size
+batch_size = 64            # batch size
 vocab_threshold = 6        # minimum word count threshold
-vocab_from_file = False    # if True, load existing vocab file
+vocab_from_file = True    # if True, load existing vocab file
 embed_size = 512           # dimensionality of image and word embeddings
 hidden_size = 512          # number of features in hidden state of the RNN decoder
 num_epochs = 5             # number of training epochs (1 for testing)
@@ -38,7 +38,7 @@ transform_train = transforms.Compose([
 # Build data loader.
 data_loader = get_loader(transform=transform_train, mode='train', batch_size=batch_size, vocab_threshold=vocab_threshold,
                          vocab_from_file=vocab_from_file)
-val_data_loader = get_loader(transform=transform_train, mode='test', vocab_from_file=vocab_from_file)
+val_data_loader = get_loader(transform=transform_train, mode='val')
 
 # The size of the vocabulary.
 vocab_size = len(data_loader.dataset.vocab)
@@ -68,24 +68,13 @@ total_step = math.ceil(len(data_loader.dataset.caption_lengths) / data_loader.ba
 # Open the training log file.
 f = open(log_file, 'w')
 
-# old_time = time.time()
-# response = requests.request("GET",
-#                             "http://metadata.google.internal/computeMetadata/v1/instance/attributes/keep_alive_token",
-#                             headers={"Metadata-Flavor": "Google"})
-
 # Collect losses in these arrays
 training_loss_per_epoch = []
-test_loss_per_epoch = []
+val_loss_per_epoch = []
 
 for epoch in range(1, num_epochs + 1):
     avg_batch_loss = 0
     for i_step in range(1, total_step + 1):
-
-        # if time.time() - old_time > 60:
-        #     old_time = time.time()
-        #     requests.request("POST",
-        #                      "https://nebula.udacity.com/api/v1/remote/keep-alive",
-        #                      headers={'Authorization': "STAR " + response.text})
 
         # Randomly sample a caption length, and sample indices with that length.
         indices = data_loader.dataset.get_train_indices()
@@ -134,7 +123,6 @@ for epoch in range(1, num_epochs + 1):
         # Print training statistics (on different line).
         if i_step % print_every == 0:
             print('\r' + stats)
-            # print(clean_sentence(outputs[0]))
 
     # Save the weights.
     if epoch % save_every == 0:
@@ -146,9 +134,20 @@ for epoch in range(1, num_epochs + 1):
 
     # TODO: Validation
     # use val_data_loader form above
+    avg_loss = 0
 
+    # for i in 1 - total_val_steps?
+    # ...
+    # loss = criterion()
+    # avg_loss += loss
+    # ...
+
+    val_loss_per_epoch.append(avg_loss)
 
 
 # Close the training log file.
 f.close()
 
+utils.plotLosses(training_loss_per_epoch,
+                 val_loss_per_epoch,
+                 'Cross Entropy Loss (per Epoch)')

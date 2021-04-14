@@ -125,7 +125,7 @@ class VizWizDataset(data.Dataset):
 
     def __getitem__(self, index):
         # obtain image and caption if in training mode
-        if self.mode == 'train':
+        if self.mode == 'train' or self.mode == 'val':
             ann_id = self.ids[index]
             caption = self.wizviz.anns[ann_id]['caption']
             img_id = self.wizviz.anns[ann_id]['image_id']
@@ -166,7 +166,7 @@ class VizWizDataset(data.Dataset):
         return indices
 
     def __len__(self):
-        if self.mode == 'train':
+        if self.mode == 'train' or self.mode == 'val':
             return len(self.ids)
         else:
             return len(self.paths)
