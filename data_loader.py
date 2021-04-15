@@ -20,7 +20,8 @@ def get_loader(transform=None,
                unk_word="<unk>",
                vocab_from_file=True,
                num_workers=0,
-               vizwiz_loc='./'):
+               vizwiz_loc='./',
+               full_batch=False):
     """Returns the data loader.
     Args:
       transform: Image transform.
@@ -50,7 +51,6 @@ def get_loader(transform=None,
                                         'annotations/train.json')
 
     if mode == 'val':
-        assert batch_size == 1, "Please change batch_size to 1 if testing your model."
         assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
         assert vocab_from_file == True, "Change vocab_from_file to True."
         img_folder = os.path.join(vizwiz_loc,
@@ -62,8 +62,8 @@ def get_loader(transform=None,
         assert batch_size == 1, "Please change batch_size to 1 if testing your model."
         assert os.path.exists(vocab_file), "Must first generate vocab.pkl from training data."
         assert vocab_from_file == True, "Change vocab_from_file to True."
-        img_folder = os.path.join(vizwiz_loc, 'images/val/')
-        annotations_file = os.path.join(vizwiz_loc, 'annotations/val.json')
+        img_folder = os.path.join(vizwiz_loc, 'images/test/')
+        annotations_file = os.path.join(vizwiz_loc, 'annotations/test.json')
 
     # VizWiz caption dataset.
     dataset = VizWizDataset(transform=transform,
@@ -76,7 +76,8 @@ def get_loader(transform=None,
                           unk_word=unk_word,
                           annotations_file=annotations_file,
                           vocab_from_file=vocab_from_file,
-                          img_folder=img_folder)
+                          img_folder=img_folder,
+                          full_batch=full_batch)
 
     if mode == 'train':
         # Randomly sample a caption length, and sample indices with that length.
@@ -105,23 +106,38 @@ def get_loader(transform=None,
 class VizWizDataset(data.Dataset):
 
     def __init__(self, transform, mode, batch_size, vocab_threshold, vocab_file, start_word,
-                 end_word, unk_word, annotations_file, vocab_from_file, img_folder):
+                 end_word, unk_word, annotations_file, vocab_from_file, img_folder, full_batch):
         self.transform = transform
         self.mode = mode
         self.batch_size = batch_size
         self.vocab = Vocabulary(vocab_threshold, vocab_file, start_word,
                                 end_word, unk_word, annotations_file, vocab_from_file)
         self.img_folder = img_folder
-        if self.mode == 'train' or self.mode == 'val':
+        if self.mode == 'train':
             self.wizviz = VizWiz(annotations_file)
             self.ids = list(self.wizviz.anns.keys())
             print('Obtaining caption lengths...')
             all_tokens = [nltk.tokenize.word_tokenize(str(self.wizviz.anns[self.ids[index]]['caption']).lower()) for index
                           in tqdm(np.arange(len(self.ids)))]
             self.caption_lengths = [len(token) for token in all_tokens]
+
+        elif self.mode == 'val':
+            self.wizviz = VizWiz(annotations_file)
+            self.ids = list(self.wizviz.anns.keys())
+            print('Obtaining caption lengths...')
+            all_tokens = [nltk.tokenize.word_tokenize(str(self.wizviz.anns[self.ids[index]]['caption']).lower()) for
+                          index
+                          in tqdm(np.arange(len(self.ids)))]
+            self.caption_lengths = [len(token) for token in all_tokens]
+
+            test_info = json.loads(open(annotations_file).read())
+            self.paths = [item for item in test_info['images'] if len(self.wizviz.imgToAnns[item['id']]) > 0]
+
         else:
             test_info = json.loads(open(annotations_file).read())
             self.paths = [item['file_name'] for item in test_info['images']]
+
+
 
     def __getitem__(self, index):
         # obtain image and caption if in training mode
@@ -147,6 +163,30 @@ class VizWizDataset(data.Dataset):
             # return pre-processed image and caption tensors
             return image, caption
 
+        elif self.mode == 'val':
+            image = self.paths[index]
+            img_id = image['id']
+
+            # pick first matching cation
+            caption = self.wizviz.imgToAnns[img_id][0]
+
+            path = self.wizviz.loadImgs(img_id)[0]['file_name']
+
+            # Convert image to tensor and pre-process using transform
+            image = Image.open(os.path.join(self.img_folder, path)).convert('RGB')
+            if self.transform:
+                image = self.transform(image)
+
+            # Convert caption to tensor of word ids.
+            tokens = nltk.tokenize.word_tokenize(str(caption).lower())
+            caption = []
+            caption.append(self.vocab(self.vocab.start_word))
+            caption.extend([self.vocab(token) for token in tokens])
+            caption.append(self.vocab(self.vocab.end_word))
+            caption = torch.Tensor(caption).long()
+
+            # return pre-processed image and caption tensors
+            return image, caption, img_id
         # obtain image if in test mode
         else:
             path = self.paths[index]
