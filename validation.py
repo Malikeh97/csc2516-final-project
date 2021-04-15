@@ -32,7 +32,6 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
             val_loss += loss
             print(val_loss)
 
-            # TODO: save captions
             if save_captions:
                 pred = decoder.sample(features.unsqueeze(1))
                 caption = utils.clean_sentence(pred, data_loader)
@@ -46,6 +45,24 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
 
         val_loss /= total_step
         return val_loss
+
+def test(encoder, decoder, data_loader):
+    with torch.no_grad():
+        encoder.eval()
+        decoder.eval()
+
+        for batch in data_loader:
+            # Obtain the batch.
+            orig_img, img = batch #next(iter(data_loader))
+            # Move batch of images and captions to GPU if CUDA is available.
+            img = img.to(device)
+
+            features = encoder(img)
+
+            pred = decoder.sample(features.unsqueeze(1))
+            caption = utils.clean_sentence(pred, data_loader)
+
+            #TODO: show image and caption
 
 if __name__ == "__main__":
     # test validation

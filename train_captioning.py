@@ -136,8 +136,6 @@ if __name__ == "__main__":
         avg_batch_loss /= total_step
         training_loss_per_epoch.append(avg_batch_loss)
 
-        # TODO: Validation - Done?
-        # use val_data_loader form above
         avg_loss = 0
         val_loss = validation.validate(encoder, decoder, criterion, val_data_loader, vocab_size, device)
         val_loss_per_epoch.append(avg_loss)
@@ -149,3 +147,7 @@ if __name__ == "__main__":
     utils.plotLosses(training_loss_per_epoch,
                      val_loss_per_epoch,
                      'Cross Entropy Loss (per Epoch)')
+
+
+    test_data_loader = get_loader(transform=transform_train, mode='test')
+    validation.test(encoder, decoder, test_data_loader)
