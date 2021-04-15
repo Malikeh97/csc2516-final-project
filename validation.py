@@ -8,7 +8,7 @@ import math
 import utils
 import json
 
-def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu', save_captions=False):
+def validate(encoder, decoder, criterion, data_loader, vocab_size, epoch, device='cpu', save_captions=False):
     with torch.no_grad():
         encoder.eval()
         decoder.eval()
@@ -37,14 +37,12 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
                 caption = utils.clean_sentence(pred, data_loader)
                 predicted_captions.append({"image_id": int(img_id), "caption": str(caption)})
 
-            break
-
         if save_captions:
             with open('val_captions.json', 'w') as fp:
                 json.dump(predicted_captions, fp)
 
         val_loss /= total_step
-        print(val_loss)
+        print("Validation Loss for epoch " + str(epoch) + ': ' + str(int(val_loss)))
         return val_loss
 
 def test(encoder, decoder, data_loader):
@@ -106,4 +104,4 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss().cuda() if torch.cuda.is_available() else nn.CrossEntropyLoss()
 
 
-    validate(encoder, decoder, criterion, val_data_loader, vocab_size, device, save_captions=True)
+    validate(encoder, decoder, criterion, val_data_loader, vocab_size, 2, device, save_captions=True)
