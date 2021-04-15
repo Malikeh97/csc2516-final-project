@@ -16,6 +16,7 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
 
         total_step = len(data_loader.dataset.paths) #number of images in val dataset
         predicted_captions = []
+        print("Running Validation...")
         for batch in data_loader:
             # Obtain the batch.
             images, captions, img_id = batch #next(iter(data_loader))
@@ -30,7 +31,6 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
             # Calculate the batch loss.
             loss = criterion(outputs.contiguous().view(-1, vocab_size), captions.view(-1))
             val_loss += loss
-            print(val_loss)
 
             if save_captions:
                 pred = decoder.sample(features.unsqueeze(1))
@@ -44,6 +44,7 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
                 json.dump(predicted_captions, fp)
 
         val_loss /= total_step
+        print(val_loss)
         return val_loss
 
 def test(encoder, decoder, data_loader):

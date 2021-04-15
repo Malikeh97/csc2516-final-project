@@ -137,7 +137,7 @@ if __name__ == "__main__":
         training_loss_per_epoch.append(avg_batch_loss)
 
         avg_loss = 0
-        val_loss = validation.validate(encoder, decoder, criterion, val_data_loader, vocab_size, device)
+        val_loss = validation.validate(encoder, decoder, criterion, val_data_loader, vocab_size, epoch, device)
         val_loss_per_epoch.append(avg_loss)
 
 
