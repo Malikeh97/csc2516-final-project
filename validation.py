@@ -6,6 +6,7 @@ from torchvision import transforms
 from models import EncoderCNN, DecoderRNN
 import math
 import utils
+import json
 
 def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu', save_captions=False):
     with torch.no_grad():
@@ -14,11 +15,10 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
         val_loss = 0
 
         total_step = len(data_loader.dataset.paths) #number of images in val dataset
-
+        predicted_captions = []
         for batch in data_loader:
-
             # Obtain the batch.
-            images, captions, img_ids = batch #next(iter(data_loader))
+            images, captions, img_id = batch #next(iter(data_loader))
             # Move batch of images and captions to GPU if CUDA is available.
             images = images.to(device)
             captions = captions.to(device)
@@ -36,6 +36,13 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, device='cpu',
             if save_captions:
                 pred = decoder.sample(features.unsqueeze(1))
                 caption = utils.clean_sentence(pred, data_loader)
+                predicted_captions.append({"image_id": int(img_id), "caption": str(caption)})
+
+            break
+
+        if save_captions:
+            with open('val_captions.json', 'w') as fp:
+                json.dump(predicted_captions, fp)
 
         val_loss /= total_step
         return val_loss
