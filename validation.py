@@ -42,7 +42,7 @@ def validate(encoder, decoder, criterion, data_loader, vocab_size, epoch, device
                 json.dump(predicted_captions, fp)
 
         val_loss /= total_step
-        print("Validation Loss for epoch " + str(epoch) + ': ' + str(int(val_loss)))
+        print("Validation Loss for epoch " + str(epoch) + ': ' + str(float(val_loss)))
         return val_loss
 
 def test(encoder, decoder, data_loader):
