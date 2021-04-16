@@ -8,7 +8,9 @@ from models import EncoderCNN, DecoderRNN
 import numpy as np
 import tqdm
 import PIL
+from PIL import Image
 import cv2
+import matplotlib.pyplot as plt
 
 # scale and move the coordinates so they fit [0; 1] range
 def scale_to_01_range(x):
@@ -38,27 +40,6 @@ def decoder_tsne_plot_representation(word_embeddings, vocab, num_words=100):
     pylab.ylim(mapped_X[:, 1].min(), mapped_X[:, 1].max())
     pylab.show()
 
-# Compute the coordinates of the image on the plot
-def compute_plot_coordinates(image, x, y, image_centers_area_size, offset):
-    image_height, image_width, _ = image.shape
-
-    # compute the image center coordinates on the plot
-    center_x = int(image_centers_area_size * x) + offset
-
-    # in matplotlib, the y axis is directed upward
-    # to have the same here, we need to mirror the y coordinate
-    center_y = int(image_centers_area_size * (1 - y)) + offset
-
-    # knowing the image center,
-    # compute the coordinates of the top left and bottom right corner
-    tl_x = center_x - int(image_width / 2)
-    tl_y = center_y - int(image_height / 2)
-
-    br_x = tl_x + image_width
-    br_y = tl_y + image_height
-
-    return tl_x, tl_y, br_x, br_y
-
 def encoder_tsne_plot_representation(features, images, num_images=5):
     """Plot a 2-D visualization of the learned representations using t-SNE."""
     print(features.shape)
@@ -66,28 +47,23 @@ def encoder_tsne_plot_representation(features, images, num_images=5):
     mapped_X[:, 0] = scale_to_01_range(mapped_X[:, 0])
     mapped_X[:, 1] = scale_to_01_range(mapped_X[:, 1])
 
-    tsne_plot = 255 * np.ones((1000, 1000, 3), np.uint8)
-
+    width = 4000
+    height = 3000
+    max_dim = 200
+    full_image = Image.new('RGBA', (width, height))
     for i, img in enumerate(images):
         if i == num_images: break
 
-        trans = transforms.ToPILImage(mode='RGB')
-        img = trans(img.squeeze())
-        maxsize = (26, 26)
-        img.thumbnail(maxsize)
-
-        open_cv_image = np.array(img)
-        open_cv_image = open_cv_image[:, :, ::-1].copy()
-
         x = mapped_X[i, 0]
         y = mapped_X[i, 1]
-        # compute the coordinates of the image on the scaled plot visualization
-        tl_x, tl_y, br_x, br_y = compute_plot_coordinates(open_cv_image, x, y, 1000, 0)
 
-        tsne_plot[tl_y:br_y, tl_x:br_x, :] = img
+        rs = max(1, img.width / max_dim, img.height / max_dim)
+        img = img.resize((int(img.width / rs), int(img.height / rs)), Image.ANTIALIAS)
+        full_image.paste(img, (int((width - max_dim) * x), int((height - max_dim) * y)), mask=img.convert('RGBA'))
 
-    cv2.imshow('t-SNE', tsne_plot)
-    cv2.waitKey()
+    plt.figure(figsize=(16, 12))
+    plt.imshow(full_image)
+    plt.show()
 
 # Testing code
 
@@ -111,12 +87,13 @@ test_data_loader = get_loader(transform=transform_train, mode='test')
 # test word plots
 # vocab_size = len(test_data_loader.dataset.vocab)
 # vocab = test_data_loader.dataset.vocab.word2idx
+# vocab_size = 6293
 #
 # decoder = DecoderRNN(embed_size, hidden_size, vocab_size)
 # decoder.eval()
 # decoder.load_state_dict(torch.load('./models/batch 64/decoder-1.pkl', map_location=torch.device('cpu')))
 #
-# decoder_tsne_plot_representation(decoder.word_embeddings.weight, vocab)
+# decoder_tsne_plot_representation(decoder.word_embeddings.weight, vocab, 100)
 
 # test image plots
 encoder = EncoderCNN(embed_size)
@@ -124,13 +101,15 @@ encoder.eval()
 encoder.load_state_dict(torch.load('./models/batch 64/encoder-1.pkl', map_location=torch.device('cpu')))
 
 i = 0
-imgs = []
+draw_imgs = []
 features = np.array([])
+num_images = 50
 for batch in test_data_loader:
-    if i > 1: break
+    if i > num_images: break
     orig_img, img = batch
 
-    imgs.append(img)
+    pil_img = Image.fromarray(orig_img.squeeze().numpy().astype('uint8'), 'RGB')
+    draw_imgs.append(pil_img)
 
     if i == 0:
         features = encoder(img).detach().numpy()
@@ -138,5 +117,5 @@ for batch in test_data_loader:
         features = np.vstack((features, encoder(img).detach().numpy()))
     i+=1
 
-encoder_tsne_plot_representation(features, imgs)
+encoder_tsne_plot_representation(features, draw_imgs, num_images)
 
