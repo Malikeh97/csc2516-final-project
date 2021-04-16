@@ -168,7 +168,7 @@ class VizWizDataset(data.Dataset):
             img_id = image['id']
 
             # pick first matching cation
-            caption = self.wizviz.imgToAnns[img_id][0]
+            caption = np.random.choice(self.wizviz.imgToAnns[img_id])
 
             path = self.wizviz.loadImgs(img_id)[0]['file_name']
 
