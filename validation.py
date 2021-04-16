@@ -67,18 +67,18 @@ def test(encoder, decoder, data_loader):
 if __name__ == "__main__":
     # test validation
     transform_train = transforms.Compose([
-        transforms.Resize(256),                          # smaller edge of image resized to 256
-        transforms.RandomCrop(224),                      # get 224x224 crop from random location
-        transforms.RandomHorizontalFlip(),               # horizontally flip image with probability=0.5
-        transforms.ToTensor(),                           # convert the PIL Image to a tensor
-        transforms.Normalize((0.485, 0.456, 0.406),      # normalize image for pre-trained model
+        transforms.Resize(256),  # smaller edge of image resized to 256
+        transforms.RandomCrop(224),  # get 224x224 crop from random location
+        transforms.RandomHorizontalFlip(),  # horizontally flip image with probability=0.5
+        transforms.ToTensor(),  # convert the PIL Image to a tensor
+        transforms.Normalize((0.485, 0.456, 0.406),  # normalize image for pre-trained model
                              (0.229, 0.224, 0.225))])
 
-    batch_size = 32            # batch size
-    vocab_threshold = 6        # minimum word count threshold
-    vocab_from_file = False    # if True, load existing vocab file
-    embed_size = 512           # dimensionality of image and word embeddings
-    hidden_size = 512          # number of features in hidden state of the RNN decoder
+    batch_size = 32  # batch size
+    vocab_threshold = 6  # minimum word count threshold
+    vocab_from_file = False  # if True, load existing vocab file
+    embed_size = 512  # dimensionality of image and word embeddings
+    hidden_size = 512  # number of features in hidden state of the RNN decoder
 
     val_data_loader = get_loader(transform=transform_train, mode='val')
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     decoder.eval()
 
     # Load the trained weights.
-    MODEL_DIR = './models/BatchSizes/1epoch_' + str(batch_size) + 'batch/'
+    MODEL_DIR = './Models/BatchSizes/1epoch_' + str(batch_size) + 'batch/'
     encoder_path = os.path.join(MODEL_DIR, 'encoder-1epoch-%dbatch.pkl' % batch_size)
     decoder_path = os.path.join(MODEL_DIR, 'decoder-1epoch-%dbatch.pkl' % batch_size)
     encoder.load_state_dict(torch.load(encoder_path, map_location=torch.device('cpu')))
@@ -101,12 +101,13 @@ if __name__ == "__main__":
     encoder.to(device)
     decoder.to(device)
 
-
     # Define the loss function.
     criterion = nn.CrossEntropyLoss().cuda() if torch.cuda.is_available() else nn.CrossEntropyLoss()
 
+    _, predicted_captions = validate(encoder, decoder, criterion, val_data_loader, vocab_size, 1, device,
+                                     save_captions=True)
 
-    _, predicted_captions = validate(encoder, decoder, criterion, val_data_loader, vocab_size, 1, device, save_captions=True)
+    RESULTS_DIR = './results/BatchSizes/1epoch_' + str(batch_size) + 'batch/''
 
-    with open(os.path.join('val_captions.json', 'w')) as fp:
+    with open(os.path.join(RESULTS_DIR, 'val_captions.json'), 'w')) as fp:
         json.dump(predicted_captions, fp)
