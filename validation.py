@@ -107,7 +107,7 @@ if __name__ == "__main__":
     _, predicted_captions = validate(encoder, decoder, criterion, val_data_loader, vocab_size, 1, device,
                                      save_captions=True)
 
-    RESULTS_DIR = './results/BatchSizes/1epoch_' + str(batch_size) + 'batch/''
+    RESULTS_DIR = './results/BatchSizes/1epoch_' + str(batch_size) + 'batch/'
 
-    with open(os.path.join(RESULTS_DIR, 'val_captions.json'), 'w')) as fp:
+    with open(os.path.join(RESULTS_DIR, 'val_captions.json'), 'w') as fp:
         json.dump(predicted_captions, fp)
