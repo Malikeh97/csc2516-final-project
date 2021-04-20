@@ -22,7 +22,11 @@ The generated captions and resulting scores are stored in the `validation result
 
 Testing on all models was preformed using `testing.py` to generate image-caption pairs and TSNE plots of the learned image and word latent spaces. These results are saved in the `test results/` directory.
 
-## Developers ##
+## Results
+** Captioned Test Images
+![Captioned Test Images]("test results/generated-captions.png")
+
+## Team Members: ##
 - Saad Saleem (University of Toronto, saad@cs.toronto.edu)
 - Shamitra Rohan (University of Toronto, shamitra@cs.toronto.edu)
 - Malikeh Ehghaghi (University of Toronto, malikeh.ehghaghi@mail.utoronto.ca)
