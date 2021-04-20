@@ -6,7 +6,7 @@ All images and their captions were obtained from the [VizWiz](https://vizwiz.org
 
 ## Training
 
-The baseline CNN+RNN model is trained using `train_captioning.py`. The 'clip_rnn_image_captioning.ipynb` notebook has modified this code for training the modified CLIP+RNN and CLIP+Attention models.
+The baseline CNN+RNN model is trained using `train_captioning.py`. The `clip_rnn_image_captioning.ipynb` notebook has modified this code for training the modified CLIP+RNN and CLIP+Attention models.
 
 ## Validation
 
