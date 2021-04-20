@@ -24,7 +24,7 @@ Testing on all models was preformed using `testing.py` to generate image-caption
 
 ## Results
 ** Captioned Test Images
-![Captioned Test Images]("test results/generated-captions.png")
+![Captioned Test Images](test results/generated-captions.png)
 
 ## Team Members: ##
 - Saad Saleem (University of Toronto, saad@cs.toronto.edu)
