@@ -147,7 +147,3 @@ if __name__ == "__main__":
     utils.plotLosses(training_loss_per_epoch,
                      val_loss_per_epoch,
                      'Cross Entropy Loss (per Epoch)')
-
-
-    test_data_loader = get_loader(transform=transform_train, mode='test')
-    validation.test(encoder, decoder, test_data_loader)

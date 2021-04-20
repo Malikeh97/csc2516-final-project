@@ -25,45 +25,6 @@ def scale_to_01_range(x):
     # make the distribution fit [0; 1] by dividing by its range
     return starts_from_zero / value_range
 
-def decoder_tsne_plot_representation(word_embeddings, word2idx, words):
-    """Plot a 2-D visualization of the learned representations using t-SNE."""
-    print(word_embeddings.shape)
-    mapped_X = TSNE(n_components=2).fit_transform(word_embeddings)
-    mapped_X[:, 0] = scale_to_01_range(mapped_X[:, 0])
-    mapped_X[:, 1] = scale_to_01_range(mapped_X[:, 1])
-
-    plt.figure(figsize=(12,12))
-    for w in words:
-        i = word2idx[w]
-        plt.text(mapped_X[i, 0], mapped_X[i, 1], w)
-
-    plt.xlim(mapped_X[:, 0].min(), mapped_X[:, 0].max())
-    plt.ylim(mapped_X[:, 1].min(), mapped_X[:, 1].max())
-
-def encoder_tsne_plot_representation(features, images, num_images=5):
-    """Plot a 2-D visualization of the learned representations using t-SNE."""
-    print(features.shape)
-    mapped_X = TSNE(n_components=2).fit_transform(features)
-    mapped_X[:, 0] = scale_to_01_range(mapped_X[:, 0])
-    mapped_X[:, 1] = scale_to_01_range(mapped_X[:, 1])
-
-    width = 4000
-    height = 3000
-    max_dim = 200
-    full_image = Image.new('RGBA', (width, height))
-    for i, img in enumerate(images):
-        if i == num_images: break
-
-        x = mapped_X[i, 0]
-        y = mapped_X[i, 1]
-
-        rs = max(1, img.width / max_dim, img.height / max_dim)
-        img = img.resize((int(img.width / rs), int(img.height / rs)), Image.ANTIALIAS)
-        full_image.paste(img, (int((width - max_dim) * x), int((height - max_dim) * y)), mask=img.convert('RGBA'))
-
-    plt.figure(figsize=(16, 12))
-    plt.imshow(full_image)
-
 def tsne_plot(word_embeddings, word2idx, words, image_embeddings, images):
     print("Word Embeddings shape (vocab size, embedding size)", word_embeddings.shape)
     print("Image features shape (num images, embedding size)", image_embeddings.shape)
@@ -96,6 +57,7 @@ def tsne_plot(word_embeddings, word2idx, words, image_embeddings, images):
         i = word2idx[w]
         plt.text(mapped_words[i, 0] * width, mapped_words[i, 1] * height, w)
 
+# Needed for Attention model
 def get_clip_features(clip_model, x):
     x1 = clip_model.visual.conv1(x) #torch.Size([1, 768, 7, 7])
     x2 = x1.reshape(x1.shape[0], x1.shape[1], -1) #torch.Size([1, 768, 49])
@@ -164,7 +126,6 @@ words_to_draw = []
 captions = []
 img_embeddings = np.array([])
 num_images = 10
-# start_i = 100
 for batch in test_data_loader:
     # if i < start_i: continue
     if i >= num_images: break
@@ -216,7 +177,5 @@ with open(os.path.join(SAVE_DIR, 'test_captions.json'), 'w') as fp:
 for i, img in enumerate(orig_imgs):
     img.save(os.path.join(SAVE_DIR, 'images/image_%d.jpeg' % i))
 
-# decoder_tsne_plot_representation(decoder.word_embeddings.weight.detach().numpy(), word2idx, words_to_draw)
-# encoder_tsne_plot_representation(img_embeddings, orig_imgs, num_images)
 tsne_plot(decoder.embedding.weight.detach().numpy(), word2idx, words_to_draw, img_embeddings, orig_imgs)
 plt.show()
