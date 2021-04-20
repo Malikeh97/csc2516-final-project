@@ -1,5 +1,8 @@
 # Analysis of Multi-Modal Feature Representations by CLIP for Image Captioning
 
+## Abstract
+Image captioning requires both visual understanding and linguistic processing to learn relationships between images and text. Though it is a difficult task, transformer-based models have made significant improvements as they are capable of representing multi-modal spaces (images and text) into a combined semantic space. In this project, we analyze the performance on image captioning of the transformer-based CLIP pre-training method by using it on the VizWiz-Captions dataset. We establish baseline metrics by implementing a Convolutional Neural Network - Recurrent Neural Network architecture on the same dataset. Our main contribution is to use CLIP's image encoder to successfully improve the performance of the baseline model on image captioning, a task on which CLIP's performance has not been studied extensively. 
+
 ## Data
 
 All images and their captions were obtained from the [VizWiz](https://vizwiz.org/tasks-and-datasets/image-captioning/) dataset.
