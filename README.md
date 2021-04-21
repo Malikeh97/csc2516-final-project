@@ -36,7 +36,7 @@ The generated captions and resulting scores are stored in the `validation result
 Testing on all models was preformed using `testing.py` to generate image-caption pairs and TSNE plots of the learned image and word latent spaces. These results are saved in the `test results/` directory.
 
 ## Results
-** BLEU-1,2,3,4/METEOR metrics compared with other models:**
+**BLEU-1,2,3,4/METEOR metrics compared with other models:**
 ![Model Scores](test%20results/model-scores.png)
 
 **Captioned Test Images:**
