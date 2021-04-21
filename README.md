@@ -13,7 +13,6 @@ The ViT model splits an image into fixed-size patches, linearly embed each of th
 vectors to a standard transformer encoder.
 ![CLIP Image-Encoder Architecture](model-diagrams/ViT-B_32-architecture.png)
 
-
 **Attention-based Decoder Model Review:**
 ![Attention-based Decoder Model](model-diagrams/attention-based-decoder.png)
 
@@ -37,6 +36,9 @@ The generated captions and resulting scores are stored in the `validation result
 Testing on all models was preformed using `testing.py` to generate image-caption pairs and TSNE plots of the learned image and word latent spaces. These results are saved in the `test results/` directory.
 
 ## Results
+** BLEU-1,2,3,4/METEOR metrics compared with other models:**
+![Model Scores](test%20results/model-scores.png)
+
 **Captioned Test Images:**
 ![Captioned Test Images](test%20results/generated-captions.png)
 
